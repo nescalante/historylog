@@ -1,0 +1,4 @@
+DBRefFolders found in your dbp file
+Connect String: Data Source=
+Provider: Oracle
+

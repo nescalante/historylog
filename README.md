@@ -1,4 +1,6 @@
-historylog
+History Log
 ==========
 
-an history logger for entities
+Manage entities history logging on multiple databases.
+
+the class LogManager exposes methods to perform logging actions.

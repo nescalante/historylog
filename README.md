@@ -1,9 +1,8 @@
 History Log
 ==========
 
-Manage entities history logging.
-
-The class LogManager exposes methods to perform logging actions.
+Manage entities history logging on database.
+All functionality are in the `LogManager` class, which exposes methods to perform logging actions.
 
 ## Defining entities ##
 

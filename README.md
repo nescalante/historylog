@@ -4,6 +4,8 @@ History Log
 Manage entities history logging on database.
 All functionality are in the `LogManager` class, which exposes methods to perform logging actions.
 
+Before starting, please deploy [database proyect](https://github.com/nescalante/historylog/tree/master/HistoryLog.Database).
+
 ## Defining entities ##
 
 **HistoryLog** uses `System.ComponentModel.DataAnnotations` objects to map entitie keys. Entities must have at least one `[Key]` attribute in their properties.

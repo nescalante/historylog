@@ -19,7 +19,7 @@ namespace HistoryLog
         internal int GetApplicationId(string application)
         {
             // get application id if exists, if not, create and return id
-            var ids = _conn.Query<int>("select id from applications where name = @application", new { application = application });
+            var ids = _conn.Query<int>("select id from logApplications where name = @application", new { application = application });
 
             if (ids.Count() > 0)
             {
@@ -27,15 +27,15 @@ namespace HistoryLog
             }
             else
             {
-                return _conn.Query<int>("insert into applications(name) values (@name); select cast(scope_identity() as int)", new { name = application }).Single();
+                return _conn.Query<int>("insert into logApplications(name) values (@name); select cast(scope_identity() as int)", new { name = application }).Single();
             }
         }
 
         internal int GetEntityId(Type type, int applicationId)
         {
-            var entity = type.Name;
+            var entity = type.FullName;
             // get application id if exists, if not, create and return id
-            var ids = _conn.Query<int>("select id from entities where name = @entity and applicationId = @applicationId", new { entity = entity, applicationid = applicationId });
+            var ids = _conn.Query<int>("select id from logEntities where name = @entity and applicationId = @applicationId", new { entity = entity, applicationid = applicationId });
 
             if (ids.Count() > 0)
             {
@@ -43,12 +43,12 @@ namespace HistoryLog
             }
             else
             {
-                var id = _conn.Query<int>("insert into entities(name, applicationId) values (@name, @applicationId); select cast(scope_identity() as int)", new { name = entity, applicationId = applicationId }).Single();
+                var id = _conn.Query<int>("insert into logEntities(name, applicationId) values (@name, @applicationId); select cast(scope_identity() as int)", new { name = entity, applicationId = applicationId }).Single();
 
                 // create columns for new entity
                 foreach (var p in type.GetProperties())
                 {
-                    _conn.Execute("insert into entitycolumns(name, entityId) values(@name, @entityId)", new { name = p.Name, entityId = id });
+                    _conn.Execute("insert into logEntityColumns(name, entityId) values(@name, @entityId)", new { name = p.Name, entityId = id });
                 }
 
                 return id;
@@ -79,21 +79,21 @@ namespace HistoryLog
                 var newColumns = type.GetProperties().Where(p => !columns.Any(c => p.Name == c.Name));
                 foreach (var c in newColumns)
                 {
-                    _conn.Execute("insert into entitycolumns(name, entityId) values(@name, @entityId)", new { name = c.Name, entityId = entityId });
+                    _conn.Execute("insert into logEntityColumns(name, entityId) values(@name, @entityId)", new { name = c.Name, entityId = entityId });
                 }
 
                 return GetColumns(entityId);
             }
         }
 
-        public IEnumerable<EntityColumn> GetColumns(int entityId)
+        internal IEnumerable<EntityColumn> GetColumns(int entityId)
         {
-            return _conn.Query<EntityColumn>("select * from entityColumns where entityid = @entityId", new { entityId = entityId });
+            return _conn.Query<EntityColumn>("select * from logEntityColumns where entityid = @entityId", new { entityId = entityId });
         }
 
         internal void Log(int logId, int columnId, object value)
         {
-            _conn.Execute("insert into logvalues(logId, entityColumnId, value) values(@logId, @entityColumnId, @value)", new { logId = logId, entityColumnId = columnId, value = (value == null ? null : value.ToString()) });
+            _conn.Execute("insert into logValues(logId, entityColumnId, value) values(@logId, @entityColumnId, @value)", new { logId = logId, entityColumnId = columnId, value = (value == null ? null : value.ToString()) });
         }
 
         internal int CreateLog(int entityId, string user)
@@ -109,7 +109,7 @@ namespace HistoryLog
 
             foreach (var kv in keyValues)
             {
-                sql += " and exists (select null from logvalues lv where l.id = lv.logid and lv.entitycolumnid = @key" + kv.Key + " and lv.value = @value" + kv.Key + ")";
+                sql += " and exists (select null from logValues lv where l.id = lv.logId and lv.entityColumnId = @key" + kv.Key + " and lv.value = @value" + kv.Key + ")";
                 p.Add("@key" + kv.Key, kv.Key);
                 p.Add("@value" + kv.Key, kv.Value);
             }
@@ -119,7 +119,7 @@ namespace HistoryLog
 
         internal IEnumerable<Log<T>> GetHistory<T>(IEnumerable<LogInfo> logs) where T : new()
         {
-            var info = _conn.Query<ColumnInfo>("select ec.name as [Column], lv.value, lv.logid from logvalues lv inner join entitycolumns ec on lv.entitycolumnId = ec.id where lv.logid in @ids", new { ids = logs.Select(l => l.Id) });
+            var info = _conn.Query<ColumnInfo>("select ec.name as [Column], lv.value, lv.logid from logValues lv inner join logEntityColumns ec on lv.entityColumnId = ec.id where lv.logid in @ids", new { ids = logs.Select(l => l.Id) });
 
             foreach (var l in logs)
             {

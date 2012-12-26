@@ -10,6 +10,8 @@ namespace HistoryLog
 
         public T Entity { get; set; }
 
+        public Type Type { get { return typeof(T); } }
+
         public override string ToString()
         {
             return (this.Date + " " + this.User).Trim();

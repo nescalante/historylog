@@ -52,6 +52,12 @@ namespace HistoryLog
             return obj == null ? null : obj.ToString();
         }
 
+        /// <summary>
+        /// saves the entity log into database
+        /// </summary>
+        /// <typeparam name="T">entity type</typeparam>
+        /// <param name="entity">object</param>
+        /// <param name="user">user who perform action</param>
         public void Log<T>(T entity, string user = null) where T : new()
         {
             // get entity
@@ -72,6 +78,12 @@ namespace HistoryLog
             }
         }
 
+        /// <summary>
+        /// gets the history of some entity
+        /// </summary>
+        /// <typeparam name="T">entity type</typeparam>
+        /// <param name="entity">object</param>
+        /// <returns>history</returns>
         public IEnumerable<Log<T>> GetHistory<T>(T entity) where T : new()
         {
             var keys = this.GetKeyNames(typeof(T));
